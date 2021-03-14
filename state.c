@@ -1,237 +1,206 @@
-
-
 #include "main.h"
 
-int initialize_state (f_state * s, int argc, char **argv)
-	{
-	char	**argv_copy = argv;
-
-	/* The routines in current_time return statically allocated memory.
-     We strdup the result so that we don't accidently free() the wrong
-     thing later on. */
-	s->start_time = strdup(current_time());
-	wildcard = '?';
-	s->audit_file_open = FALSE;
-	s->mode = DEFAULT_MODE;
-	s->input_file = NULL;
-	s->fileswritten = 0;
-	s->block_size = 512;
-
-	/* We use the setter fuctions here to call realpath */
-	set_config_file(s, DEFAULT_CONFIG_FILE);
-	set_output_directory(s, DEFAULT_OUTPUT_DIRECTORY);
-
-	s->invocation = (char *)malloc(sizeof(char) * MAX_STRING_LENGTH);
-	s->invocation[0] = 0;
-	s->chunk_size = CHUNK_SIZE;
-	s->num_builtin = 0;
-	s->skip = 0;
-	s->time_stamp = FALSE;
-	do
-		{
-		strncat(s->invocation, *argv_copy, MAX_STRING_LENGTH - strlen(s->invocation));
-		strncat(s->invocation, " ", MAX_STRING_LENGTH - strlen(s->invocation));
-		++argv_copy;
-		}
-	while (*argv_copy);
-
-	return FALSE;
-	}
-
-void free_state(f_state *s)
-{
-	free(s->start_time);
-	free(s->output_directory);
-	free(s->config_file);
+int initialize_state (f_state * s, int argc, char **argv) {
+    char **argv_copy = argv;
+    /*
+    The routines in current_time return statically allocated memory.
+    We strdup the result so that we don't accidently free() the wrong
+    thing later on.
+    */
+    s->start_time = strdup(current_time());
+    wildcard = '?';
+    s->audit_file_open = FALSE;
+    s->mode = DEFAULT_MODE;
+    s->input_file = NULL;
+    s->fileswritten = 0;
+    s->block_size = 512;
+    /* We use the setter fuctions here to call realpath */
+    set_config_file(s, DEFAULT_CONFIG_FILE);
+    set_output_directory(s, DEFAULT_OUTPUT_DIRECTORY);
+    s->invocation = (char *)malloc(sizeof(char) * MAX_STRING_LENGTH);
+    s->invocation[0] = 0;
+    s->chunk_size = CHUNK_SIZE;
+    s->num_builtin = 0;
+    s->skip = 0;
+    s->time_stamp = FALSE;
+    do {
+        strncat(s->invocation, *argv_copy, MAX_STRING_LENGTH - strlen(s->invocation));
+        strncat(s->invocation, " ", MAX_STRING_LENGTH - strlen(s->invocation));
+        ++argv_copy;
+    }
+    while (*argv_copy);
+    return FALSE;
 }
 
-int get_audit_file_open(f_state *s)
-{
-	return (s->audit_file_open);
+
+void free_state(f_state *s) {
+    free(s->start_time);
+    free(s->output_directory);
+    free(s->config_file);
 }
 
-char *get_invocation(f_state *s)
-{
-	return (s->invocation);
+
+int get_audit_file_open(f_state *s) {
+    return (s->audit_file_open);
 }
 
-char *get_start_time(f_state *s)
-{
-	return (s->start_time);
+
+char *get_invocation(f_state *s) {
+    return (s->invocation);
 }
 
-char *get_config_file(f_state *s)
-{
-	return (s->config_file);
+
+char *get_start_time(f_state *s) {
+    return (s->start_time);
 }
 
-int set_config_file(f_state *s, char *fn)
-{
-	char	temp[PATH_MAX];
 
-	/* If the configuration file doesn't exist, this realpath will return
-     NULL. We don't error check here as the user may specify a file
-     that doesn't currently exist */
-	realpath(fn, temp);
-
-	/* RBF - Does this create a memory leak? What happens to the old value? */
-	s->config_file = strdup(temp);
-	return FALSE;
+char *get_config_file(f_state *s) {
+    return (s->config_file);
 }
 
-char *get_output_directory(f_state *s)
-{
-	return (s->output_directory);
+
+int set_config_file(f_state *s, char *fn) {
+    char temp[PATH_MAX];
+    /*
+    If the configuration file doesn't exist, this realpath will return
+    NULL. We don't error check here as the user may specify a file
+    that doesn't currently exist
+    */
+    realpath(fn, temp);
+    /* RBF - Does this create a memory leak? What happens to the old value? */
+    s->config_file = strdup(temp);
+    return FALSE;
 }
 
-int set_output_directory(f_state *s, char *fn)
-{
-	char	temp[PATH_MAX];
-  int 	fullpathlen=0;
-	/* We don't error check here as it's quite possible that the
-     output directory doesn't exist yet. If it doesn't, realpath
-     resolves the path correctly, but still returns NULL. */
-  //strncpy(s->output_directory,fn,PATH_MAX);
-  
-	realpath(fn, temp);
-	fullpathlen=strlen(temp);
 
-	if(fullpathlen!=0)
-	{
-		s->output_directory = strdup(temp);
-	}
-	else
-	{
-		/*Realpath failed just use cwd*/
-		s->output_directory = strdup(fn);
-	}
-	return FALSE;
+char *get_output_directory(f_state *s) {
+    return (s->output_directory);
 }
 
-int get_mode(f_state *s, off_t check_mode)
-{
-	return (s->mode & check_mode);
+
+int set_output_directory(f_state *s, char *fn) {
+    char temp[PATH_MAX];
+    int fullpathlen=0;
+    /*
+    We don't error check here as it's quite possible that the
+    output directory doesn't exist yet. If it doesn't, realpath
+    resolves the path correctly, but still returns NULL.
+    */
+    //strncpy(s->output_directory,fn,PATH_MAX);
+    realpath(fn, temp);
+    fullpathlen=strlen(temp);
+    if(fullpathlen!=0) {
+        s->output_directory = strdup(temp);
+    } else {
+        /*Realpath failed just use cwd*/
+        s->output_directory = strdup(fn);
+    }
+    return FALSE;
 }
 
-void set_mode(f_state *s, off_t new_mode)
-{
-	s->mode |= new_mode;
+
+int get_mode(f_state *s, off_t check_mode) {
+    return (s->mode & check_mode);
 }
 
-void set_chunk(f_state *s, int size)
-{
-	s->chunk_size = size;
+
+void set_mode(f_state *s, off_t new_mode) {
+    s->mode |= new_mode;
 }
 
-void set_skip(f_state *s, int size)
-{
-	s->skip = size;
+
+void set_chunk(f_state *s, int size) {
+    s->chunk_size = size;
 }
 
-void set_block(f_state *s, int size)
-{
-	s->block_size = size;
+
+void set_skip(f_state *s, int size) {
+    s->skip = size;
 }
 
-void write_audit_header(f_state *s)
-{
-	audit_msg(s, "Foremost version %s by %s", VERSION, AUTHOR);
-	audit_msg(s, "Audit File");
-	audit_msg(s, "");
-	audit_msg(s, "Foremost started at %s", get_start_time(s));
-	audit_msg(s, "Invocation: %s", get_invocation(s));
-	audit_msg(s, "Output directory: %s", get_output_directory(s));
-	audit_msg(s, "Configuration file: %s", get_config_file(s));
+
+void set_block(f_state *s, int size) {
+    s->block_size = size;
 }
 
-int open_audit_file(f_state *s)
-{
-	char	fn[MAX_STRING_LENGTH];
 
-	snprintf(fn,
-			 MAX_STRING_LENGTH,
-			 "%s%c%s",
-			 get_output_directory(s),
-			 DIR_SEPARATOR,
-			 AUDIT_FILE_NAME);
-
-	if ((s->audit_file = fopen(fn, "w")) == NULL)
-		{
-		print_error(s, fn, strerror(errno));
-		fatal_error(s, "Can't open audit file");
-		}
-
-	s->audit_file_open = TRUE;
-	write_audit_header(s);
-
-	return FALSE;
+void write_audit_header(f_state *s) {
+    audit_msg(s, "Foremost version %s by %s", VERSION, AUTHOR);
+    audit_msg(s, "Audit File");
+    audit_msg(s, "");
+    audit_msg(s, "Foremost started at %s", get_start_time(s));
+    audit_msg(s, "Invocation: %s", get_invocation(s));
+    audit_msg(s, "Output directory: %s", get_output_directory(s));
+    audit_msg(s, "Configuration file: %s", get_config_file(s));
 }
 
-int close_audit_file(f_state *s)
-{
-	audit_msg(s, FOREMOST_DIVIDER);
-	audit_msg(s, "");
-	audit_msg(s, "Foremost finished at %s", current_time());
 
-	if (fclose(s->audit_file))
-		{
-		print_error(s, AUDIT_FILE_NAME, strerror(errno));
-		return TRUE;
-		}
-
-	return FALSE;
+int open_audit_file(f_state *s) {
+    char fn[MAX_STRING_LENGTH];
+    snprintf(fn, MAX_STRING_LENGTH, "%s%c%s", get_output_directory(s), DIR_SEPARATOR, AUDIT_FILE_NAME);
+    if ((s->audit_file = fopen(fn, "w")) == NULL) {
+        print_error(s, fn, strerror(errno));
+        fatal_error(s, "Can't open audit file");
+    }
+    s->audit_file_open = TRUE;
+    write_audit_header(s);
+    return FALSE;
 }
 
-void audit_msg(f_state *s, char *format, ...)
-{
-	va_list argp;
-	va_start(argp, format);
 
-	if (get_mode(s, mode_verbose)) {
-		print_message(s, format, argp);
-		va_end(argp);
-		va_start(argp, format);
-	}
-
-	vfprintf(s->audit_file, format, argp);
-	va_end(argp);
-
-	fprintf(s->audit_file, "%s", NEWLINE);
-	fflush(stdout);
+int close_audit_file(f_state *s) {
+    audit_msg(s, FOREMOST_DIVIDER);
+    audit_msg(s, "");
+    audit_msg(s, "Foremost finished at %s", current_time());
+    if (fclose(s->audit_file)) {
+        print_error(s, AUDIT_FILE_NAME, strerror(errno));
+        return TRUE;
+    }
+    return FALSE;
 }
 
-void set_input_file(f_state *s, char *filename)
-{
-	s->input_file = (char *)malloc((strlen(filename) + 1) * sizeof(char));
-	strncpy(s->input_file, filename, strlen(filename) + 1);
+
+void audit_msg(f_state *s, char *format, ...) {
+    va_list argp;
+    va_start(argp, format);
+    if (get_mode(s, mode_verbose)) {
+        print_message(s, format, argp);
+        va_end(argp);
+        va_start(argp, format);
+    }
+    vfprintf(s->audit_file, format, argp);
+    va_end(argp);
+    fprintf(s->audit_file, "%s", NEWLINE);
+    fflush(stdout);
 }
+
+
+void set_input_file(f_state *s, char *filename) {
+    s->input_file = (char *)malloc((strlen(filename) + 1) * sizeof(char));
+    strncpy(s->input_file, filename, strlen(filename) + 1);
+}
+
 
 /*Initialize any search specs*/
-int init_builtin(f_state *s, int type, char *suffix, char *header, char *footer, int header_len,
-				 int footer_len, u_int64_t max_len, int case_sen)
-{
+int init_builtin(f_state *s, int type, char *suffix, char *header, char *footer, int header_len, int footer_len, u_int64_t max_len, int case_sen) {
+    int i = s->num_builtin;
+    search_spec[i].type = type;
+    search_spec[i].suffix = (char *)malloc((strlen(suffix)+1) * sizeof(char));
+    search_spec[i].num_markers = 0;
+    strcpy(search_spec[i].suffix, suffix);
+    search_spec[i].header_len = header_len;
+    search_spec[i].footer_len = footer_len;
+    search_spec[i].max_len = max_len;
+    search_spec[i].found = 0;
+    search_spec[i].header = (unsigned char *)malloc(search_spec[i].header_len * sizeof(unsigned char));
+    search_spec[i].footer = (unsigned char *)malloc(search_spec[i].footer_len * sizeof(unsigned char));
+    search_spec[i].case_sen = case_sen;
+    memset(search_spec[i].comment, 0, COMMENT_LENGTH - 1);
+    memcpy(search_spec[i].header, header, search_spec[i].header_len);
+    memcpy(search_spec[i].footer, footer, search_spec[i].footer_len);
 
-	int i = s->num_builtin;
-
-	search_spec[i].type = type;
-	search_spec[i].suffix = (char *)malloc((strlen(suffix)+1) * sizeof(char));
-	search_spec[i].num_markers = 0;
-	strcpy(search_spec[i].suffix, suffix);
-
-	search_spec[i].header_len = header_len;
-	search_spec[i].footer_len = footer_len;
-
-	search_spec[i].max_len = max_len;
-	search_spec[i].found = 0;
-	search_spec[i].header = (unsigned char *)malloc(search_spec[i].header_len * sizeof(unsigned char));
-	search_spec[i].footer = (unsigned char *)malloc(search_spec[i].footer_len * sizeof(unsigned char));
-	search_spec[i].case_sen = case_sen;
-	memset(search_spec[i].comment, 0, COMMENT_LENGTH - 1);
-
-	memcpy(search_spec[i].header, header, search_spec[i].header_len);
-	memcpy(search_spec[i].footer, footer, search_spec[i].footer_len);
-
-	init_bm_table(search_spec[i].header,
+    init_bm_table(search_spec[i].header,
 				  search_spec[i].header_bm_table,
 				  search_spec[i].header_len,
 				  search_spec[i].case_sen,
@@ -741,53 +710,36 @@ int set_search_def(f_state *s, char *ft, u_int64_t max_file_size)
 
 }
 
-void init_bm_table(unsigned char *needle, size_t table[UCHAR_MAX + 1], size_t len, int casesensitive,
-				   int searchtype)
-{
-	size_t	i = 0, j = 0, currentindex = 0;
-
-	for (i = 0; i <= UCHAR_MAX; i++)
-		table[i] = len;
-	for (i = 0; i < len; i++)
-		{
-		if (searchtype == SEARCHTYPE_REVERSE)
-			{
-
-			currentindex = i;			//If we are running our searches backwards
-			//we count from the beginning of the string
-			}
-		else
-			{
-			currentindex = len - i - 1; //Count from the back of string
-			}
-
-		if (needle[i] == wildcard)		//No skip entry can advance us past the last wildcard in the string
-			{
-			for (j = 0; j <= UCHAR_MAX; j++)
-				table[j] = currentindex;
-			}
-
-		table[(unsigned char)needle[i]] = currentindex;
-		if (!casesensitive)
-			{
-
-			//RBF - this is a little kludgy but it works and this isn't the part
-			//of the code we really need to worry about optimizing...
-			//If we aren't case sensitive we just set both the upper and lower case
-			//entries in the jump table.
-			table[tolower(needle[i])] = currentindex;
-			table[toupper(needle[i])] = currentindex;
-			}
-		}
+void init_bm_table(unsigned char *needle, size_t table[UCHAR_MAX + 1], size_t len, int casesensitive, int searchtype) {
+    size_t i = 0, j = 0, currentindex = 0;
+    for (i = 0; i <= UCHAR_MAX; i++) table[i] = len;
+    for (i = 0; i < len; i++) {
+        if (searchtype == SEARCHTYPE_REVERSE) {
+            currentindex = i; //If we are running our searches backwards we count from the beginning of the string
+        } else {
+            currentindex = len - i - 1; //Count from the back of string
+        }
+        if (needle[i] == wildcard) { //No skip entry can advance us past the last wildcard in the string
+            for (j = 0; j <= UCHAR_MAX; j++) table[j] = currentindex;
+        }
+        table[(unsigned char)needle[i]] = currentindex;
+        if (!casesensitive) {
+            //RBF - this is a little kludgy but it works and this isn't the part
+            //of the code we really need to worry about optimizing...
+            //If we aren't case sensitive we just set both the upper and lower case
+            //entries in the jump table.
+            table[tolower(needle[i])] = currentindex;
+            table[toupper(needle[i])] = currentindex;
+        }
+    }
 }
 
-#ifdef __DEBUG
-void dump_state(f_state *s)
-{
-	printf("Current state:\n");
-	printf("Config file: %s\n", s->config_file);
-	printf("Output directory: %s\n", s->output_directory);
-	printf("Mode: %llu\n", s->mode);
 
+#ifdef __DEBUG
+void dump_state(f_state *s) {
+    printf("Current state:\n");
+    printf("Config file: %s\n", s->config_file);
+    printf("Output directory: %s\n", s->output_directory);
+    printf("Mode: %llu\n", s->mode);
 }
 #endif
